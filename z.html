@@ -485,22 +485,52 @@
         voiceButton.addEventListener('touchend', () => { if(mediaRecorder && mediaRecorder.state==='recording') { mediaRecorder.stop(); voiceButton.style.background='#c0392b'; } });
     }
 
-    socket.on('receive-message', (data) => {
+        socket.on('receive-message', (data) => {
         if (data.type === 'delete-message') { const el = document.getElementById(data.messageId); if(el) el.remove(); return; }
         if (document.getElementById(data.messageId)) return;
+
+        // 🔥 🔥 Ο ΑΠΟΛΥΤΟΣ ΜΗΧΑΝΙΣΜΟΣ LIVE REACTION ΜΕΣΩ ΚΡΥΦΟΥ ΜΗΝΥΜΑΤΟΣ
+        if (data.message === '[REACTION_FAIRY_MAGIC]') {
+            // 1. Παίζουμε live τον ήχο της νεραϊδόσκονης σε όλους!
+            soundSend.play().catch(e => console.log('Ήχος'));
+
+            // 2. Δημιουργούμε 18 ιπτάμενα στοιχεία στην οθόνη του καθενός
+            const items = ['❤️', '💖', '🌸', '🌹', '💕', '✨', '🌺'];
+            for (let i = 0; i < 18; i++) {
+                setTimeout(() => {
+                    const el = document.createElement('div');
+                    el.className = 'floating-reaction';
+                    el.innerText = items[Math.floor(Math.random() * items.length)];
+                    
+                    const randomLeft = Math.floor(Math.random() * (window.innerWidth - 60)) + 30;
+                    el.style.left = randomLeft + 'px';
+                    
+                    const randomX = (Math.random() * 100 - 50) + 'px';
+                    el.style.setProperty('--random-x', randomX);
+                    
+                    el.style.fontSize = (Math.random() * 12 + 20) + 'px';
+
+                    document.body.appendChild(el);
+                    setTimeout(() => el.remove(), 3000);
+                }, i * 80);
+            }
+            return; // 🔒 ΣΗΜΑΝΤΙΚΟ: Σταματάμε εδώ, ώστε να ΜΗΝ τυπωθεί κείμενο ή όνομα στο Chat!
+        }
+
+        // Ακολουθεί ο παλιός, κανονικός κώδικας εμφάνισης των υπόλοιπων μηνυμάτων σας
         const msgEl = document.createElement('div'); msgEl.id = data.messageId; msgEl.style.marginBottom = '8px';
         let delBtn = isAdmin ? `<button style="background:#c0392b;color:white;height:20px;padding:0 5px;margin-right:5px;" onclick="socket.emit('send-message',{type:'delete-message',messageId:'${data.messageId}'})">X</button>` : '';
         
         if (data.isVoice) { 
             msgEl.innerHTML = `${delBtn}<strong style="color:${data.color || '#00ffcc'};">${data.name}:</strong><audio controls style="max-width:180px;height:30px;display:block;" src="${data.message}"></audio>`; 
-                } else { 
-            // 🔥 ΚΛΕΙΔΙ: Προσθέτουμε font-style: italic; για πλάγια, καλλιγραφική γραφή στο μήνυμα!
+        } else { 
             msgEl.innerHTML = `${delBtn}<strong style="color:${data.color || '#00ffcc'};">${data.name}:</strong> <span style="color: #ffff00; font-style: italic;">${linkify(data.message)}</span>`; 
         }
 
         messagesContainer.appendChild(msgEl); messagesContainer.scrollTop = messagesContainer.scrollHeight;
         if(data.userId !== myUserId) soundReceive.play().catch(e=>'');
     });
+
 
     function sendMessage() {
         const text = messageInput.value.trim(); 
@@ -522,7 +552,7 @@
     messageInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') sendMessage();
     });
-    // 🎭 Λειτουργία για το άνοιγμα και κλείσιμο του GIF Panel
+        // 🎭 1. Λειτουργία για το άνοιγμα και κλείσιμο του GIF Panel
     function toggleGifPanel() {
         const panel = document.getElementById('gif-popup-panel');
         if (panel) {
@@ -534,50 +564,24 @@
         }
     }
 
-    // Σύνδεση του κλικ της φατσούλας με τη συνάρτηση
-    document.addEventListener("DOMContentLoaded", () => {
-        const gifBtn = document.getElementById('gif-panel-btn');
-        if (gifBtn) {
-            gifBtn.addEventListener('click', toggleGifPanel);
-        }
-    });
-            // ⚡ Λειτουργία που βάζει το Link του GIF στο σωστό κουτάκι και το στέλνει αυτόματα!
+    // ⚡ 2. Λειτουργία που βάζει το Link του GIF στο σωστό κουτάκι και το στέλνει αυτόματα
     function insertGifLink(gifUrl) {
-        const msgInput = document.getElementById('chat-message'); // 🔥 ΔΙΟΡΘΩΘΗΚΕ ΤΟ ID
-        const sendBtn = document.getElementById('chat-send');      // 🔥 ΔΙΟΡΘΩΘΗΚΕ ΤΟ ID
+        const msgInput = document.getElementById('chat-message');
+        const sendBtn = document.getElementById('chat-send');
         const panel = document.getElementById('gif-popup-panel');
 
         if (msgInput) {
-            msgInput.value = gifUrl; // Βάζει το σωστό link στο input box
+            msgInput.value = gifUrl; 
             if (sendBtn) sendBtn.disabled = false;
-            if (panel) panel.style.display = 'none'; // Κλείνει το panel αυτόματα
+            if (panel) panel.style.display = 'none'; 
             
-            // Εκτελεί το κλικ της αποστολής live!
             if (sendBtn) {
                 sendBtn.click();
             }
         }
     }
 
-    // 🔒 ΑΣΦΑΛΕΣ ΚΛΕΙΔΩΜΑ: Ακούει τα κλικς απευθείας πάνω στις εικόνες χωρίς παγώματα
-    document.addEventListener("DOMContentLoaded", () => {
-        // Σύνδεση του κουμπιού φατσούλας
-        const gifBtn = document.getElementById('gif-panel-btn');
-        if (gifBtn) {
-            gifBtn.addEventListener('click', toggleGifPanel);
-        }
-
-        // Αυτόματη σύνδεση κλικ σε ΟΛΕΣ τις εικόνες μέσα στο GIF Panel
-        const gifImages = document.querySelectorAll('.gif-grid .gif-item');
-        gifImages.forEach((img) => {
-            img.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                insertGifLink(this.src); // Καλεί τη συνάρτηση με το σωστό λινκ
-            });
-        });
-    });
-    // 🔍 Λειτουργία που εμφανίζει την εικόνα μεγεθυμένη μπροστά μας!
+    // 🔍 3. Λειτουργία μεγέθυνσης εικόνων (Lightbox)
     function zoomImage(srcUrl) {
         const popup = document.getElementById('image-viewer-popup');
         const img = document.getElementById('viewer-img');
@@ -587,66 +591,52 @@
         }
     }
 
-    // 🔒 ΜΗΧΑΝΙΣΜΟΣ LIVE ΑΝΤΙΔΡΑΣΗΣ (ΚΑΡΔΟΥΛΕΣ & ΛΟΥΛΟΥΔΙΑ)
+    // 🔒 4. ΟΛΟΚΛΗΡΩΜΕΝΟΣ ΚΑΙ ΕΝΙΑΙΟΣ ΜΗΧΑΝΙΣΜΟΣ ΚΛΙΚΣ (DOMContentLoaded)
+    // Ενώνει Φατσούλα, GIFs, Εικόνες και Καρδούλα για να λειτουργούν ΟΛΑ ρολόι!
     document.addEventListener("DOMContentLoaded", () => {
+        
+        // Α) Σύνδεση της Φατσούλας 😊 (Άνοιγμα/Κλείσιμο Panel)
+        const gifBtn = document.getElementById('gif-panel-btn');
+        if (gifBtn) {
+            gifBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleGifPanel();
+            });
+        }
+
+        // Β) Σύνδεση της Καρδούλας ❤️ (Live Αντίδραση)
         const reactionBtn = document.getElementById('reaction-heart-btn');
-        const chatContainer = document.getElementById('chat-container');
-
-        // Ακούμε το κρυφό σήμα από τον Render Server
-        // Χρησιμοποιούμε το υπάρχον κανάλι μηνυμάτων, στέλνοντας έναν ειδικό τύπο 'live-reaction'
-        socket.on('receive-message', (data) => {
-            if (data.type === 'live-reaction') {
-                // 1. Παίζουμε live τον ήχο της νεραϊδόσκονης (Fairy Magic) σε όλους!
-                soundSend.play().catch(e => console.log('Ήχος νεράιδας'));
-
-                // 2. Δημιουργούμε 15-20 ιπτάμενα στοιχεία (καρδιές και λουλούδια)
-                const items = ['❤️', '💖', '🌸', '🌹', '💕', '✨', '🌺'];
-                for (let i = 0; i < 18; i++) {
-                    setTimeout(() => {
-                        const el = document.createElement('div');
-                        el.className = 'floating-reaction';
-                        el.innerText = items[Math.floor(Math.random() * items.length)];
-                        
-                        // Τυχαία αρχική θέση κατά πλάτος του container
-                                            // Τυχαία αρχική θέση σε όλο το πλάτος της οθόνης
-                    const randomLeft = Math.floor(Math.random() * (window.innerWidth - 60)) + 30;
-                    el.style.left = randomLeft + 'px';
-                    
-                    // Τυχαία κίνηση δεξιά-αριστερά καθώς ανεβαίνει
-                    const randomX = (Math.random() * 100 - 50) + 'px';
-                    el.style.setProperty('--random-x', randomX);
-                    
-                    // Τυχαίο μέγεθος για φυσικό αποτέλεσμα
-                    el.style.fontSize = (Math.random() * 12 + 20) + 'px';
-
-                    // 🔥 🔥 ΤΟ ΚΛΕΙΔΙ: Καρφώνουμε την καρδούλα στο BODY για να βγει μπροστά!
-                    document.body.appendChild(el);
-
-                    // Καταστροφή του στοιχείου μόλις τελειώσει το animation
-                    setTimeout(() => el.remove(), 3000);
-
-                    }, i * 80); // Μικρή καθυστέρηση μεταξύ των στοιχείων για ροή
-                }
-            }
-        });
-
-        // Όταν ο ακροατής πατάει την Καρδούλα
         if (reactionBtn) {
-            reactionBtn.addEventListener('click', () => {
-                // Εφέ πατήματος στο κουμπί
+            reactionBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Εφέ πατήματος
                 reactionBtn.style.transform = "scale(1.3)";
                 setTimeout(() => reactionBtn.style.transform = "scale(1)", 100);
 
-                // Στέλνουμε το κρυφό σήμα στον server χωρίς όνομα ή κείμενο
+                // Αποστολή κρυφού μηνύματος
                 socket.emit('send-message', {
-                    type: 'live-reaction',
                     messageId: 'react_' + Math.random().toString(36).substr(2, 9),
+                    name: 'System',
+                    message: '[REACTION_FAIRY_MAGIC]',
+                    color: userColor,
                     userId: myUserId
                 });
             });
         }
-    });
 
+        // Γ) Αυτόματη σύνδεση κλικ σε ΟΛΕΣ τις εικόνες μέσα στο GIF Panel
+        const gifImages = document.querySelectorAll('.gif-grid .gif-item');
+        gifImages.forEach((img) => {
+            img.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                insertGifLink(this.src);
+            });
+        });
+    });
 </script>
 </body>
 </html>
